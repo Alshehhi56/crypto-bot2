@@ -34,7 +34,7 @@ def get_prices():
 def calculate_portfolio():
     prices = get_prices()
     total = 0
-    result = "📊 *Your Portfolio Value:*
+    result = "📊 *Your Portfolio Value:*\n\n
 
 "
     for token, amount in portfolio.items():
