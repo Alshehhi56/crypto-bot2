@@ -1,8 +1,8 @@
 import telebot
-import os
 
-# Get the token from Railway's environment variable
-TOKEN = os.getenv("TOKEN")
+# Directly use the token (for testing purposes only)
+TOKEN = "7489134851:AAGY6r_DAkTWmtKR8wIpq3LizKSsU6etSAM"
+
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
