@@ -42,7 +42,7 @@ def get_portfolio_value():
 def start(message):
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("📊 Recalculate Portfolio", callback_data="recalculate"))
-    bot.send_message(message.chat.id, "Bot is live!)
+    bot.send_message(message.chat.id, "Bot is live!")
 Press the button to check your portfolio value.", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data == "recalculate")
