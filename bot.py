@@ -1,59 +1,67 @@
-import telebot
-from telebot import types
-import requests
 
-TOKEN = "7489134851:AAGY6r_DAkTWmtKR8wIpq3LizKSsU6etSAM"
+import os
+import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+import time
+
+TOKEN = os.getenv("TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 portfolio = {
-    "op": 10769.03,
-    "inj": 569.88,
-    "fil": 2875.83,
-    "celo": 20695.4,
-    "beamx": 962658,
-    "tia": 3522.45,
-    "atom": 1498.42,
-    "pyth": 58373.4
+    "FIL": 2875.83,
+    "TIA": 3522.45,
+    "CELO": 20695.4,
+    "PYTH": 58373.4,
+    "INJ": 569.88,
+    "BEAMX": 962658,
+    "ATOM": 1498.42,
+    "OP": 10769.03
 }
 
-def get_prices():
-    ids = ",".join(["optimism", "injective-protocol", "filecoin", "celo", "onbeam", "celestia", "cosmos", "pyth-network"])
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd"
-    response = requests.get(url).json()
-    return {
-        "op": response["optimism"]["usd"],
-        "inj": response["injective-protocol"]["usd"],
-        "fil": response["filecoin"]["usd"],
-        "celo": response["celo"]["usd"],
-        "beamx": response["onbeam"]["usd"],
-        "tia": response["celestia"]["usd"],
-        "atom": response["cosmos"]["usd"],
-        "pyth": response["pyth-network"]["usd"]
+initial_value = 61238.76
+last_value = initial_value
+
+def get_portfolio_value():
+    # This is mock. Replace with actual price fetching logic
+    prices = {
+        "FIL": 2.8,
+        "TIA": 2.0,
+        "CELO": 0.36,
+        "PYTH": 0.13,
+        "INJ": 14.2,
+        "BEAMX": 0.0075,
+        "ATOM": 5.02,
+        "OP": 0.76
     }
-
-def calculate_portfolio():
-    prices = get_prices()
     total = 0
-    result = "📊 *Your Portfolio Value:*\n\n" 
-
     for token, amount in portfolio.items():
-        price = prices.get(token, 0)
-        value = round(price * amount, 2)
-        total += value
-        result += f"- {token.upper()}: ${value:,.2f}\n"
-    result += f"\n*Total:* ${total:,.2f}"
-    return result
+        total += prices[token] * amount
+    return round(total, 2)
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
-    markup = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton("🔄 Recalculate Portfolio", callback_data="recalculate")
-    markup.add(button)
-    bot.send_message(message.chat.id, "Welcome! Use the button below to recalculate your portfolio:", reply_markup=markup)
+def start(message):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton("📊 Recalculate Portfolio", callback_data="recalculate"))
+    bot.send_message(message.chat.id, "Bot is live!
+Press the button to check your portfolio value.", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data == "recalculate")
 def handle_recalculate(call):
-    text = calculate_portfolio()
-    bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
+    global last_value
+    current_value = get_portfolio_value()
+    change = ((current_value - last_value) / last_value) * 100
 
-bot.polling(non_stop=True)
+    response = f"📊 *Your Portfolio Value:*
+
+💰 ${current_value:,.2f}"
+    if abs(change) >= 1:
+        response += f"
+🔔 Value changed by {change:.2f}%"
+    else:
+        response += f"
+📈 Change: {change:.2f}%"
+
+    last_value = current_value
+    bot.send_message(call.message.chat.id, response, parse_mode="Markdown")
+
+bot.infinity_polling()
