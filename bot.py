@@ -34,9 +34,9 @@ def send_portfolio(chat_id):
     result = "f📊 *Your Portfolio Value:* ${new_value:,.2f}"
     if abs(change) >= 5:
         direction = "📈 Increased" if change > 0 else "📉 Decreased"
-        result += f"
+        result += f
 
-{direction} by {abs(change):.2f}%"
+"{direction} by {abs(change):.2f}%"
 
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("🔁 Recalculate", callback_data="recalc"))
