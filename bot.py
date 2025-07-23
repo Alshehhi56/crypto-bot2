@@ -1,48 +1,48 @@
-import os
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+import os
 
 TOKEN = os.getenv("TOKEN")
-if not TOKEN:
-    raise ValueError("TOKEN environment variable not set")
 bot = telebot.TeleBot(TOKEN)
 
-# Store previous values per user
-user_previous_values = {}
+# Store the last portfolio value globally
+last_value = 61238.76  # Example starting value
 
-def get_portfolio_value():
-    # Dummy value, replace with actual logic if needed
-    return 61000.00
-
-@bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
+@bot.message_handler(commands=['start'])
+def start(message):
     markup = InlineKeyboardMarkup()
-    markup.row_width = 1
-    markup.add(InlineKeyboardButton("📊 Recalculate Portfolio", callback_data="recalculate"))
-    bot.send_message(
-        message.chat.id,
-        "Welcome! Use the button below to check your portfolio value.",
-        reply_markup=markup
-    )
+    markup.add(InlineKeyboardButton("🔁 Recalculate", callback_data="recalc"))
+    bot.send_message(message.chat.id, "🤖 Bot is live!", reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: True)
-def callback_query(call):
-    user_id = call.from_user.id
-    new_value = get_portfolio_value()
-    previous_value = user_previous_values.get(user_id)
-    if previous_value is not None:
-        try:
-            change = ((new_value - previous_value) / previous_value) * 100
-            if abs(change) >= 5:
-                bot.send_message(call.message.chat.id, f"⚠️ Portfolio changed by {change:.2f}%")
-        except ZeroDivisionError:
-            bot.send_message(call.message.chat.id, "Error: Previous portfolio value is zero.")
-    user_previous_values[user_id] = new_value
-    result = f"📊 *Your Portfolio Value:*\n\n💰 ${new_value:,.2f}"
-    bot.send_message(call.message.chat.id, result, parse_mode='Markdown')
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    bot.send_message(message.chat.id, "ℹ️ Use /portfolio to view your current portfolio value.")
 
-if __name__ == "__main__":
-    try:
-        bot.polling(none_stop=True)
-    except Exception as e:
-        print(f"Bot polling failed: {e}")
+@bot.message_handler(commands=['portfolio'])
+def portfolio(message):
+    send_portfolio(message.chat.id)
+
+@bot.callback_query_handler(func=lambda call: call.data == "recalc")
+def recalc_callback(call):
+    send_portfolio(call.message.chat.id)
+
+def send_portfolio(chat_id):
+    global last_value
+    new_value = 61238.76  # Simulated; replace with real calculation
+    change = ((new_value - last_value) / last_value) * 100
+
+    result = f"📊 *Your Portfolio Value:*
+
+${new_value:,.2f}"
+    if abs(change) >= 5:
+        direction = "📈 Increased" if change > 0 else "📉 Decreased"
+        result += f"
+
+{direction} by {abs(change):.2f}%"
+
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton("🔁 Recalculate", callback_data="recalc"))
+    bot.send_message(chat_id, result, parse_mode="Markdown", reply_markup=markup)
+    last_value = new_value
+
+bot.polling()
