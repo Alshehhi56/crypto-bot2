@@ -31,9 +31,7 @@ def send_portfolio(chat_id):
     new_value = 61238.76  # Simulated; replace with real calculation
     change = ((new_value - last_value) / last_value) * 100
 
-    result = "f📊 *Your Portfolio Value:*
-
-${new_value:,.2f}"
+    result = "f📊 *Your Portfolio Value:* ${new_value:,.2f}"
     if abs(change) >= 5:
         direction = "📈 Increased" if change > 0 else "📉 Decreased"
         result += f"
